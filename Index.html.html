@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الخريطة الذهنية التفاعلية لخطة التنشيف والحديد</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #090d16;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(56, 189, 248, 0.12) 0%, transparent 45%);
+            color: #f8fafc;
+        }
+        /* Tree Connector Lines for RTL */
+        .tree-branch {
+            position: relative;
+            padding-right: 1.75rem;
+            border-right: 2px solid rgba(51, 65, 85, 0.75);
+            margin-right: 1rem;
+        }
+        .tree-node-wrapper {
+            position: relative;
+        }
+        .tree-node-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 1.35rem;
+            right: -1.75rem;
+            width: 1.5rem;
+            height: 2px;
+            background: rgba(51, 65, 85, 0.75);
+        }
+        .node-card {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+        .node-card:hover {
+            border-color: rgba(52, 211, 153, 0.45);
+            transform: translateX(-3px);
+        }
+        .node-card.active-node {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.12);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Top Header -->
+    <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-6 py-4">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">
+                    🧠
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-black text-white leading-tight">
+                        الخريطة الذهنية التفاعلية: <span class="text-emerald-400">خطة التنشيف والحديد</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">انقر على أي عقدة لاستعراض التفاصيل والأمر الجاهز، أو استخدم أزرار الطي والتوسيع</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="expandAll()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 transition cursor-pointer">
+                    توسيع الكل +
+                </button>
+                <button onclick="collapseAll()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 transition cursor-pointer">
+                    طيّ الفروع -
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Split Workspace -->
+    <div class="max-w-7xl w-full mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 sm:p-6">
+        
+        <!-- Right Panel: Interactive Tree Mind Map (7 cols) -->
+        <section class="lg:col-span-7 bg-slate-900/40 rounded-3xl border border-slate-800/80 p-5 sm:p-6 overflow-y-auto">
+            <!-- Root Node -->
+            <div onclick="selectNode('root')" id="node-root" class="node-card active-node rounded-2xl p-4 sm:p-5 cursor-pointer mb-5 border-r-4 border-r-emerald-400">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🏆</span>
+                        <div>
+                            <span class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">الهدف المركزي</span>
+                            <h2 class="text-lg sm:text-xl font-black text-white">منظومة التنشيف وصالة الحديد</h2>
+                        </div>
+                    </div>
+                    <span class="text-xs bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full font-bold">4 محاور رئيسية</span>
+                </div>
+            </div>
+
+            <!-- Main Branches Container -->
+            <div class="tree-branch space-y-4" id="mindmap-tree">
+                <!-- Rendered via JS -->
+            </div>
+        </section>
+
+        <!-- Left Panel: Inspector & Actionable Gemini Prompt (5 cols) -->
+        <aside class="lg:col-span-5">
+            <div class="sticky top-24 rounded-3xl bg-slate-900/80 backdrop-blur-xl border border-slate-800 p-6 shadow-2xl" id="detail-panel">
+                <!-- Populated dynamically on node click -->
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Copy Toast -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-sm shadow-xl opacity-0 pointer-events-none transition-all duration-300 translate-y-4">
+        <span>✓ تم نسخ الأمر الجاهز للتطبيق!</span>
+    </div>
+
+    <script>
+        const mindMapData = {
+            root: {
+                id: 'root',
+                title: 'منظومة التنشيف وصالة الحديد',
+                badge: 'الخطة الشاملة',
+                color: 'emerald',
+                icon: '🏆',
+                summary: 'خريطة متكاملة تجمع بين التغذية المحسوبة، التمرين الذكي، والمتابعة بأدوات الذكاء الاصطناعي لخسارة الدهون مع الحفاظ على الكتلة العضلية.',
+                bullets: [
+                    'القاعدة الذهبية: عجز سعرات معتدل (300 - 500 سعرة) مع الحفاظ على أوزانك في النادي.',
+                    'الاستمرارية أهم من المثالية: 80% التزام يومي يصنع نتيجة مذهلة خلال 12 أسبوعاً.',
+                    'انقر على أي فرع في الشجرة لاستعراض تفاصيله والأمر المخصص له في Gemini.'
+                ],
+                toolName: 'NotebookLM + Deep Research',
+                prompt: 'أجرِ بحثاً عميقاً حول أفضل استراتيجية علمية لمرحلة التنشيف للاعبي الحديد (عجز السعرات، البروتين، وتعديل الكارديو) ولخّص القواعد في جدول بسيط.'
+            },
+            branches: [
+                {
+                    id: 'nutrition',
+                    title: '1. التغذية وحساب الماكروز',
+                    badge: '70% من النتيجة',
+                    color: 'sky',
+                    icon: '🥗',
+                    summary: 'التحكم الذكي في السعرات والبروتين لضمان حرق الدهون ومنع هدم العضلات أو الشعور بالجوع الشديد.',
+                    bullets: [
+                        'البروتين: 1.8 إلى 2.2 جرام لكل كيلوجرام من وزن الجسم يومياً.',
+                        'الدهون الصحية: 0.7 إلى 0.8 جرام لكل كيلوجرام لدعم الهرمونات.',
+                        'الكاربوهيدرات: باقي السعرات تُوزع حول وقت التمرين لرفع الطاقة.'
+                    ],
+                    toolName: 'التعلّم الموجّه (Guided Learning)',
+                    prompt: 'فعّل التعلّم الموجّه وعلّمني كيف أحسب سعرات التنشيف والماكروز لجسمي خطوة بخطوة. اسألني عن وزني وطولي أولاً.'
+                },
+                {
+                    id: 'training',
+                    title: '2. صالة الحديد والكارديو',
+                    badge: 'بناء وحفاظ على العضل',
+                    color: 'amber',
+                    icon: '🏋️',
+                    summary: 'في التنشيف، الحديد هو الإشارة التي تُجبر جسمك على الاحتفاظ بالعضل وحرق الدهون بدلاً منه.',
+                    bullets: [
+                        'نظام 4 أيام أسبوعياً (علوي / سفلي - Upper / Lower) لاستشفاء ممتاز.',
+                        'حافظ على أوزانك الثقيلة ولا تتحول لأوزان خفيفة وتكرارات عالية.',
+                        'الكارديو: 20 دقيقة مشي مائل بعد الحديد + 8,000 إلى 10,000 خطوة يومياً.'
+                    ],
+                    toolName: 'مساحة العمل (Canvas)',
+                    prompt: 'افتح Canvas وصمّم لي جدول تمارين حديد أسبوعي (4 أيام: علوي/سفلي) للتنشيف يوضح التمرين، الجولات، التكرارات، ووقت الراحة.'
+                },
+                {
+                    id: 'meals',
+                    title: '3. تجهيز الوجبات والمطاعم',
+                    badge: 'الالتزام العملي',
+                    color: 'purple',
+                    icon: '🍱',
+                    summary: 'تجهيز وجباتك مسبقاً (Meal Prep) واستخدام كوتش التغذية يجنبك التخريب عند الجوع المفاجئ.',
+                    bullets: [
+                        'تجهيز وجبات 3 أيام مسبقاً (صدور دجاج، أرز بسمتي، خضار، روب يوناني).',
+                        'في المطاعم: اطلب المشويات واستبعد الصوصات الكريمية والمقليات.',
+                        'اشرب 3 إلى 4 لتر ماء يومياً للتحكم في الشهية.'
+                    ],
+                    toolName: 'Gems + Gemini Live',
+                    prompt: 'أنت كوتش تغذية للتنشيف. كلما أرسلت لك مكونات في مطبخي أو اسم مطعم، اقترح عليّ وجبتين عاليتي البروتين مع حساب الكميات بالجرام.'
+                },
+                {
+                    id: 'tracking',
+                    title: '4. المتابعة وكسر ثبات الوزن',
+                    badge: 'التطوير المستمر',
+                    color: 'rose',
+                    icon: '📈',
+                    summary: 'الاعتماد على المتوسط الأسبوعي للوزن والصور والقياسات بدلاً من التوتر من تذبذب الوزن اليومي.',
+                    bullets: [
+                        'قس وزنك صباحاً على معدة فارغة 3 مرات أسبوعياً واحسب المتوسط.',
+                        'إذا ثبت المتوسط لأسبوعين: قلل 150 سعرة من الكارب أو زد 2000 خطوة يومياً.',
+                        'النوم من 7 إلى 8 ساعات ضروري لخفض الكورتيزول وتسريع الحرق.'
+                    ],
+                    toolName: 'تحليل البيانات + المهام المجدولة',
+                    prompt: 'حلّل ملف متابعة التنشيف المرفق: احسب متوسط وزني الأسبوعي، ارسم مخططاً بيانياً لنزول الوزن، وأخبرني هل أحتاج لتقليل سعراتي.'
+                }
+            ]
+        };
+
+        // Add sub-nodes to each branch
+        mindMapData.branches[0].children = [
+            {
+                id: 'nut-protein',
+                title: 'مصادر البروتين والكارب النظيفة',
+                badge: 'المطبخ',
+                color: 'sky',
+                icon: '🍗',
+                summary: 'اختيار أطعمة عالية الحجم وقليلة السعرات يمنحك شعوراً بالشبع لفترات طويلة.',
+                bullets: [
+                    'البروتين: صدور دجاج، تونة بالماء، بياض بيض، سمك فيليه، روب يوناني 0% دسم.',
+                    'الكارب: بطاطا مسلوقة أو مشوية (أكثر إشباعاً)، شوفان، أرز بسمتي، فواكه.',
+                    'الدهون: زيت زيتون، صفار بيض، أفوكادو، مكسرات نيئة بكميات موزونة.'
+                ],
+                toolName: 'التطبيقات المرتبطة (@Google Keep)',
+                prompt: '@Google Keep أنشئ لي قائمة مقاضي للتنشيف مقسمة حسب أقسام السوبرماركت تشمل البروتين والكارب والخضار.'
+            },
+            {
+                id: 'nut-supermarket',
+                title: 'فحص المنتجات في السوبرماركت',
+                badge: 'التسوق الذكي',
+                color: 'sky',
+                icon: '🛒',
+                summary: 'تجنب السعرات المخفية في الصلصات والمنتجات المكتوب عليها "دايت" أو "فتنس" خداعاً.',
+                bullets: [
+                    'انتبه لكمية السكر المضاف والدهون المشبعة في جدول القيم الغذائية.',
+                    'استخدم كاميرا Gemini Live لقراءة الملصق الغذائي في ثانيتين.'
+                ],
+                toolName: 'Gemini Live (الكاميرا)',
+                prompt: 'أنا في مرحلة تنشيف؛ اقرأ القيم الغذائية في هذا المنتج بالكاميرا وأخبرني في جملتين هل يناسبني أم فيه سكريات عالية؟'
+            }
+        ];
+
+        mindMapData.branches[1].children = [
+            {
+                id: 'trn-split',
+                title: 'تقسيمة التمرين الأسبوعية (4 أيام)',
+                badge: 'الجدول',
+                color: 'amber',
+                icon: '📅',
+                summary: 'توزيع ذكي يتيح تمرين كل عضلة مرتين أسبوعياً مع 3 أيام راحة للاستشفاء.',
+                bullets: [
+                    'الأحد: علوي A (تركيز على الصدر والظهر الثقيل).',
+                    'الإثنين: سفلي A (تركيز على السكوات والأرجل الأمامية).',
+                    'الأربعاء: علوي B (تركيز على الأكتاف والذراعين والظهر العريض).',
+                    'الخميس: سفلي B (تركيز على الرفعة الميتة الرومانية والأرجل الخلفية).'
+                ],
+                toolName: 'تقويم جوجل (@Google Calendar)',
+                prompt: '@Google Calendar ثبّت مواعيد تمرين الحديد أيام الأحد والإثنين والأربعاء والخميس الساعة 6 مساءً مع تنبيه قبلها بنصف ساعة.'
+            },
+            {
+                id: 'trn-form',
+                title: 'تصحيح الأداء وتجنب الإصابات',
+                badge: 'التكنيك',
+                color: 'amber',
+                icon: '🎯',
+                summary: 'الأداء الصحيح يضمن وصول الحمل للعضلة المستهدفة ويحميك من الإصابات أثناء عجز السعرات.',
+                bullets: [
+                    'تحكم في النزول البطيء (2-3 ثوانٍ) في كل تكرار.',
+                    'استخدم @YouTube لاستخراج أهم 3 نقاط تقنية لأي تمرين جديد.'
+                ],
+                toolName: 'يوتيوب (@YouTube)',
+                prompt: '@YouTube ابحث عن فيديو قصير يشرح الأداء الصحيح لتمرين السحب العالي للظهر ولخّص لي أهم 3 نصائح لتجنب الأخطاء.'
+            }
+        ];
+
+        mindMapData.branches[2].children = [
+            {
+                id: 'meal-prep',
+                title: 'تحضير الوجبات الأسبوعي (Meal Prep)',
+                badge: 'توفير الوقت',
+                color: 'purple',
+                icon: '⏱️',
+                summary: 'تخصيص ساعة واحدة مرتين في الأسبوع لتجهيز البروتين والكارب يضمن التزامك بنسبة 100%.',
+                bullets: [
+                    'اطبخ 1.5 كجم صدور دجاج متبلة دفعة واحدة وقسّمها في علب.',
+                    'اطلب من Gemini جدول وجبات تلقائي كل يوم جمعة.'
+                ],
+                toolName: 'المهام المجدولة (Scheduled Actions)',
+                prompt: 'كل يوم جمعة الساعة 4:00 عصراً، اقترح عليّ جدول وجبات تنشيف لمدة 5 أيام مع قائمة المقاضي.'
+            }
+        ];
+
+        mindMapData.branches[3].children = [
+            {
+                id: 'trk-audio',
+                title: 'مراجعة الخطة صوتياً (البودكاست)',
+                badge: 'التحفيز المستمر',
+                color: 'rose',
+                icon: '🎧',
+                summary: 'حوّل ملفاتك وأبحاثك في NotebookLM إلى حلقة بودكاست تسمعها في الطريق للنادي.',
+                bullets: [
+                    'ارفع جدولك وأبحاثك في NotebookLM.',
+                    'ولّد Audio Overview مخصص لتحفيزك ومراجعة قواعدك.'
+                ],
+                toolName: 'دفتر الملاحظات (NotebookLM)',
+                prompt: 'اجعلا النقاش حماسياً وعملياً باللغة العربية حول خطتي للتنشيف والحديد من مصادري المرفوعة.'
+            }
+        ];
+
+        const colorClasses = {
+            emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30' },
+            sky:     { text: 'text-sky-400',     bg: 'bg-sky-500/15',     border: 'border-sky-500/30' },
+            amber:   { text: 'text-amber-400',   bg: 'bg-amber-500/15',   border: 'border-amber-500/30' },
+            purple:  { text: 'text-purple-400',  bg: 'bg-purple-500/15',  border: 'border-purple-500/30' },
+            rose:    { text: 'text-rose-400',    bg: 'bg-rose-500/15',    border: 'border-rose-500/30' }
+        };
+
+        let currentSelectedId = 'root';
+
+        function findNodeById(id) {
+            if (id === 'root') return mindMapData.root;
+            for (const b of mindMapData.branches) {
+                if (b.id === id) return b;
+                if (b.children) {
+                    const child = b.children.find(c => c.id === id);
+                    if (child) return child;
+                }
+            }
+            return mindMapData.root;
+        }
+
+        function renderTree() {
+            const container = document.getElementById('mindmap-tree');
+            container.innerHTML = '';
+
+            mindMapData.branches.forEach(branch => {
+                const c = colorClasses[branch.color] || colorClasses.emerald;
+                const branchWrapper = document.createElement('div');
+                branchWrapper.className = 'tree-node-wrapper';
+
+                const hasChildren = branch.children && branch.children.length > 0;
+
+                branchWrapper.innerHTML = `
+                    <div id="node-${branch.id}" onclick="selectNode('${branch.id}')" class="node-card rounded-2xl p-4 cursor-pointer flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">${branch.icon}</span>
+                            <div>
+                                <h3 class="font-extrabold text-white text-sm sm:text-base">${branch.title}</h3>
+                                <span class="text-[11px] font-bold ${c.text}">${branch.badge}</span>
+                            </div>
+                        </div>
+                        ${hasChildren ? `
+                            <button onclick="event.stopPropagation(); toggleBranch('${branch.id}')" id="toggle-btn-${branch.id}" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold flex items-center justify-center border border-slate-700 cursor-pointer" title="طي / توسيع">
+                                −
+                            </button>
+                        ` : ''}
+                    </div>
+                    ${hasChildren ? `
+                        <div id="children-${branch.id}" class="tree-branch mt-3 space-y-2.5">
+                            ${branch.children.map(child => `
+                                <div class="tree-node-wrapper">
+                                    <div id="node-${child.id}" onclick="selectNode('${child.id}')" class="node-card rounded-xl p-3.5 cursor-pointer flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2.5">
+                                            <span class="text-base">${child.icon}</span>
+                                            <span class="font-bold text-slate-200 text-xs sm:text-sm">${child.title}</span>
+                                        </div>
+                                        <span class="text-[10px] px-2 py-0.5 rounded-md ${c.bg} ${c.text} font-bold">${child.badge}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+                container.appendChild(branchWrapper);
+            });
+        }
+
+        function toggleBranch(branchId) {
+            const childrenEl = document.getElementById(`children-${branchId}`);
+            const btnEl = document.getElementById(`toggle-btn-${branchId}`);
+            if (!childrenEl) return;
+            const isHidden = childrenEl.classList.toggle('hidden');
+            btnEl.textContent = isHidden ? '+' : '−';
+        }
+
+        function expandAll() {
+            mindMapData.branches.forEach(b => {
+                const el = document.getElementById(`children-${b.id}`);
+                const btn = document.getElementById(`toggle-btn-${b.id}`);
+                if (el) el.classList.remove('hidden');
+                if (btn) btn.textContent = '−';
+            });
+        }
+
+        function collapseAll() {
+            mindMapData.branches.forEach(b => {
+                const el = document.getElementById(`children-${b.id}`);
+                const btn = document.getElementById(`toggle-btn-${b.id}`);
+                if (el) el.classList.add('hidden');
+                if (btn) btn.textContent = '+';
+            });
+        }
+
+        function selectNode(id) {
+            currentSelectedId = id;
+            document.querySelectorAll('.node-card').forEach(el => el.classList.remove('active-node'));
+            const activeEl = document.getElementById(`node-${id}`);
+            if (activeEl) activeEl.classList.add('active-node');
+
+            const node = findNodeById(id);
+            const c = colorClasses[node.color] || colorClasses.emerald;
+            const panel = document.getElementById('detail-panel');
+
+            panel.innerHTML = `
+                <div class="flex items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl ${c.bg} border ${c.border} flex items-center justify-center text-2xl">
+                            ${node.icon}
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold ${c.text}">${node.badge}</span>
+                            <h2 class="text-lg sm:text-xl font-black text-white">${node.title}</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-sm text-slate-300 leading-relaxed mb-5">
+                    ${node.summary}
+                </p>
+
+                <div class="mb-6">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">القواعد التنفيذية لهذا الفرع:</h3>
+                    <ul class="space-y-2.5">
+                        ${node.bullets.map(item => `
+                            <li class="flex items-start gap-2.5 text-xs sm:text-sm text-slate-200 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                                <span class="${c.text} font-black mt-0.5">✦</span>
+                                <span class="leading-relaxed">${item}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+
+                <div class="rounded-2xl bg-slate-950/90 border border-slate-800 p-4">
+                    <div class="flex items-center justify-between gap-2 mb-2.5">
+                        <span class="text-xs font-bold ${c.text}">
+                            الأداة المقترحة: ${node.toolName}
+                        </span>
+                        <button onclick="copyCurrentPrompt()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold transition cursor-pointer">
+                            نسخ الأمر
+                        </button>
+                    </div>
+                    <p class="text-xs text-emerald-100/90 leading-relaxed select-all" id="active-prompt-text">"${node.prompt}"</p>
+                </div>
+            `;
+        }
+
+        function copyCurrentPrompt() {
+            const node = findNodeById(currentSelectedId);
+            if (!node) return;
+            const textArea = document.createElement('textarea');
+            textArea.value = node.prompt;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+
+            const toast = document.getElementById('toast');
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2200);
+        }
+
+        renderTree();
+        selectNode('root');
+    </script>
+</body>
+</html>
